@@ -20,9 +20,9 @@ export default function EditStudentForm({
     useEffect(() => {
         if (student) {
             form.reset({
-                firstName: student.firstName,
-                lastName: student.lastName,
-                email: student.email,
+                firstName: student.firstName || '',
+                lastName: student.lastName || '',
+                email: student.email || '',
             });
         }
     }, [student, form]);
@@ -50,10 +50,12 @@ export default function EditStudentForm({
                         }
                     );
                 } else {
-                    alert(
-                        result.error?.message ||
-                        'Failed to update student'
-                    );
+                    form.setError('root.serverError', {
+                        type: 'server',
+                        message:
+                            result.error?.message ||
+                            'Unable to update student. Please try again.',
+                    });
                 }
 
                 return;
@@ -65,127 +67,180 @@ export default function EditStudentForm({
                 onStudentUpdated(result.data);
             }
         } catch (error) {
-            console.error(error);
-            alert('Something went wrong while updating the student.');
+            console.error('Failed to update student:', error);
+
+            form.setError('root.serverError', {
+                type: 'server',
+                message: 'Something went wrong. Please try again.',
+            });
         }
     };
 
     return (
-        <div className="w-full max-w-2xl mb-8">
-            <h2 className="text-2xl font-bold mb-4">
-                Edit Student
-            </h2>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            {/* Accent */}
+            <div className="h-1 bg-blue-600" />
 
+            {/* Header */}
+            <div className="border-b border-slate-200 px-6 py-5 sm:px-8">
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-900">
+                            Edit Student
+                        </h3>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                            Update the student&apos;s information below.
+                        </p>
+                    </div>
+
+                    <span className="hidden text-sm text-slate-400 sm:block">
+                        ID: {student.id}
+                    </span>
+                </div>
+            </div>
+
+            {/* Form */}
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="flex flex-col gap-4"
+                className="px-6 py-6 sm:px-8 sm:py-8"
             >
-                {/* First Name */}
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="edit-firstName">
-                        First Name
-                    </label>
+                <div className="grid gap-6 sm:grid-cols-2">
+                    {/* First Name */}
+                    <div>
+                        <label
+                            htmlFor="firstName"
+                            className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
+                            First Name
+                        </label>
 
-                    <input
-                        id="edit-firstName"
-                        type="text"
-                        className="border border-gray-900 rounded-md px-2 py-2"
-                        {...form.register('firstName', {
-                            required: 'First name is required',
-                            minLength: {
-                                value: 2,
-                                message: 'First name must be at least 2 characters',
-                            },
-                            maxLength: {
-                                value: 50,
-                                message: 'First name must be at most 50 characters',
-                            },
-                        })}
-                    />
+                        <input
+                            type="text"
+                            id="firstName"
+                            placeholder="Enter first name"
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-slate-900"
+                            {...form.register('firstName', {
+                                required: 'First name is required',
+                                minLength: {
+                                    value: 2,
+                                    message:
+                                        'First name must be at least 2 characters',
+                                },
+                                maxLength: {
+                                    value: 50,
+                                    message:
+                                        'First name must be at most 50 characters',
+                                },
+                            })}
+                        />
 
-                    {form.formState.errors.firstName && (
-                        <p className="text-red-600 text-sm">
-                            {form.formState.errors.firstName.message}
-                        </p>
-                    )}
+                        {form.formState.errors.firstName && (
+                            <p className="mt-1.5 text-sm text-red-600">
+                                {form.formState.errors.firstName.message}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Last Name */}
+                    <div>
+                        <label
+                            htmlFor="lastName"
+                            className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
+                            Last Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="lastName"
+                            placeholder="Enter last name"
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-slate-900"
+                            {...form.register('lastName', {
+                                required: 'Last name is required',
+                                minLength: {
+                                    value: 2,
+                                    message:
+                                        'Last name must be at least 2 characters',
+                                },
+                                maxLength: {
+                                    value: 50,
+                                    message:
+                                        'Last name must be at most 50 characters',
+                                },
+                            })}
+                        />
+
+                        {form.formState.errors.lastName && (
+                            <p className="mt-1.5 text-sm text-red-600">
+                                {form.formState.errors.lastName.message}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Email */}
+                    <div className="sm:col-span-2">
+                        <label
+                            htmlFor="email"
+                            className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
+                            Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="student@example.com"
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-slate-900"
+                            {...form.register('email', {
+                                required: 'Email is required',
+                                pattern: {
+                                    value: /^\S+@\S+\.\S+$/,
+                                    message:
+                                        'Please enter a valid email address',
+                                },
+                            })}
+                        />
+
+                        {form.formState.errors.email && (
+                            <p className="mt-1.5 text-sm text-red-600">
+                                {form.formState.errors.email.message}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
-                {/* Last Name */}
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="edit-lastName">
-                        Last Name
-                    </label>
-
-                    <input
-                        id="edit-lastName"
-                        type="text"
-                        className="border border-gray-900 rounded-md px-2 py-2"
-                        {...form.register('lastName', {
-                            required: 'Last name is required',
-                            minLength: {
-                                value: 2,
-                                message: 'Last name must be at least 2 characters',
-                            },
-                            maxLength: {
-                                value: 50,
-                                message: 'Last name must be at most 50 characters',
-                            },
-                        })}
-                    />
-
-                    {form.formState.errors.lastName && (
-                        <p className="text-red-600 text-sm">
-                            {form.formState.errors.lastName.message}
+                {/* Server Error */}
+                {form.formState.errors.root?.serverError && (
+                    <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                        <p className="text-sm font-medium text-red-700">
+                            {form.formState.errors.root.serverError.message}
                         </p>
-                    )}
-                </div>
+                    </div>
+                )}
 
-                {/* Email */}
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="edit-email">
-                        Email
-                    </label>
+                {/* Actions */}
+                <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="rounded-lg border border-slate-300 bg-white px-6 py-2.5 font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                        Cancel
+                    </button>
 
-                    <input
-                        id="edit-email"
-                        type="email"
-                        className="border border-gray-900 rounded-md px-2 py-2"
-                        {...form.register('email', {
-                            required: 'Email is required',
-                            pattern: {
-                                value: /^\S+@\S+\.\S+$/,
-                                message: 'Please enter a valid email address',
-                            },
-                        })}
-                    />
-
-                    {form.formState.errors.email && (
-                        <p className="text-red-600 text-sm">
-                            {form.formState.errors.email.message}
-                        </p>
-                    )}
-                </div>
-
-                <div className="flex gap-3">
                     <button
                         type="submit"
                         disabled={
                             !form.formState.isValid ||
+                            !form.formState.isDirty ||
                             form.formState.isSubmitting
                         }
-                        className="bg-blue-600 text-white py-2 px-5 font-bold rounded-md disabled:bg-gray-500"
+                        className="rounded-lg border border-blue-600 bg-blue-600 px-6 py-2.5 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-300 disabled:bg-blue-300 disabled:text-white"
                     >
                         {form.formState.isSubmitting
                             ? 'Updating...'
-                            : 'Update'}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="bg-gray-500 text-white py-2 px-5 font-bold rounded-md"
-                    >
-                        Cancel
+                            : 'Update Student'}
                     </button>
                 </div>
             </form>

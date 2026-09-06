@@ -7,30 +7,31 @@ export default function StudentList({ refreshKey, onEdit }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const getStudents = async () => {
-        try {
-            setLoading(true);
-            setError('');
-
-            const response = await fetch('/api/students');
-            const result = await response.json();
-
-            if (!response.ok) {
-                setError(result.error?.message || 'Failed to load students');
-                return;
-            }
-
-            setStudents(result.data || []);
-        } catch (error) {
-            console.error(error);
-            setError('Something went wrong while loading students.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        getStudents();
+        const fetchStudents = async () => {
+            try {
+                setLoading(true);
+                setError('');
+
+                const response = await fetch('/api/students');
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error?.message || 'Failed to load students.'
+                    );
+                }
+
+                setStudents(result.data || []);
+            } catch (err) {
+                console.error('Failed to load students:', err);
+                setError('Unable to load students. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStudents();
     }, [refreshKey]);
 
     const deleteStudent = async (id) => {
@@ -50,63 +51,95 @@ export default function StudentList({ refreshKey, onEdit }) {
             const result = await response.json();
 
             if (!response.ok) {
-                alert(result.error?.message || 'Failed to delete student');
+                alert(
+                    result.error?.message ||
+                    'Unable to delete student. Please try again.'
+                );
                 return;
             }
 
             setStudents((currentStudents) =>
                 currentStudents.filter((student) => student.id !== id)
             );
-        } catch (error) {
-            console.error(error);
-            alert('Something went wrong while deleting the student.');
+        } catch (err) {
+            console.error('Failed to delete student:', err);
+            alert('Something went wrong. Please try again.');
         }
     };
 
     if (loading) {
-        return <p>Loading students...</p>;
+        return (
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-sm text-slate-500">Loading students...</p>
+            </div>
+        );
     }
 
     if (error) {
-        return <p className="text-red-600">{error}</p>;
+        return (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                <p className="text-sm font-medium text-red-700">
+                    {error}
+                </p>
+            </div>
+        );
     }
 
     return (
-        <div className="w-full max-w-2xl mt-10">
-            <h2 className="text-2xl font-bold mb-4">
-                Students
-            </h2>
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                <div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                        Student Records
+                    </h3>
 
+                    <p className="mt-1 text-sm text-slate-500">
+                        {students.length}{' '}
+                        {students.length === 1 ? 'student' : 'students'} registered
+                    </p>
+                </div>
+            </div>
+
+            {/* Empty State */}
             {students.length === 0 ? (
-                <p>No students found.</p>
+                <div className="px-6 py-10 text-center">
+                    <p className="text-sm text-slate-500">
+                        No students have been registered yet.
+                    </p>
+                </div>
             ) : (
-                <div className="flex flex-col gap-3">
+                <div className="divide-y divide-slate-200">
                     {students.map((student) => (
                         <div
                             key={student.id}
-                            className="border border-gray-300 rounded-md p-4 flex items-center justify-between"
+                            className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
                         >
-                            <div>
-                                <p className="font-bold">
+                            {/* Student Info */}
+                            <div className="min-w-0">
+                                <h4 className="text-base font-semibold text-slate-900">
                                     {student.firstName} {student.lastName}
-                                </p>
+                                </h4>
 
-                                <p className="text-gray-600">
+                                <p className="mt-1 text-sm text-slate-500">
                                     {student.email}
                                 </p>
                             </div>
 
-                            <div className="flex gap-2">
+                            {/* Actions */}
+                            <div className="flex shrink-0 gap-2">
                                 <button
+                                    type="button"
                                     onClick={() => onEdit(student)}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                                    className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
                                 >
                                     Edit
                                 </button>
 
                                 <button
+                                    type="button"
                                     onClick={() => deleteStudent(student.id)}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-md"
+                                    className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
                                 >
                                     Delete
                                 </button>
