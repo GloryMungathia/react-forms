@@ -1,73 +1,85 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+
+import AddStudentForm from '@/components/forms/AddStudentForm';
+import StudentList from '@/components/forms/StudentList';
+import EditStudentForm from '@/components/forms/EditStudentForm';
+
+import AddCourseForm from '@/components/forms/AddCourseForm';
+import CourseList from '@/components/forms/CourseList';
+import EditCourseForm from '@/components/forms/EditCourseForm';
 
 export default function Home() {
-  const form = useForm({
-    defaultValues: {
-      firstName: 'Glory',
-      lastName: 'Mutala',
-      email: 'glorymutala@gmail.com',
-    },
-  });
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [courseRefreshKey, setCourseRefreshKey] = useState(0);
+
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editingCourse, setEditingCourse] = useState(null);
+
+  const handleStudentCreated = () => {
+    setRefreshKey((current) => current + 1);
+  };
+
+  const handleStudentUpdated = () => {
+    setEditingStudent(null);
+    setRefreshKey((current) => current + 1);
+  };
+
+  const handleCourseCreated = () => {
+    setCourseRefreshKey((current) => current + 1);
+  };
+
+  const handleCourseUpdated = () => {
+    setEditingCourse(null);
+    setCourseRefreshKey((current) => current + 1);
+  };
 
   return (
-    <div className='flex flex-col h-screen w-screen justify-center items-center'>
-      <div className='flex flex-col gap-2 w-[30rem]'>
-        <h1 className='text-2xl'>Student Registration</h1>
-        <form>
-          <div className='flex flex-col gap-1'>
-            <label htmlFor='firstName'>First Name</label>
-            <input
-              className='border border-gray-900 rounded-md px-2 py-1'
-              type='text'
-              id='firstName'
-              {...form.register('firstName', {
-                required: true,
-              })}
+    <main className="min-h-screen py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+
+        {/* STUDENTS */}
+        <section className="mb-16">
+          {editingStudent ? (
+            <EditStudentForm
+              student={editingStudent}
+              onStudentUpdated={handleStudentUpdated}
+              onCancel={() => setEditingStudent(null)}
             />
-          </div>
-
-          <div className='flex flex-col gap-1'>
-            <label htmlFor='lastName'>Last Name</label>
-            <input
-              className='border border-gray-900 rounded-md px-2 py-1'
-              type='text'
-              id='lastName'
-              {...form.register('lastName', {
-                required: true,
-                validate: (value) => {
-                  if (value.toLowerCase() !== 'maina') {
-                    return false;
-                  }
-                  return true;
-                },
-              })}
+          ) : (
+            <AddStudentForm
+              onStudentCreated={handleStudentCreated}
             />
-          </div>
+          )}
 
-          <div className='flex flex-col gap-1'>
-            <label htmlFor='email'>Email</label>
-            <input
-              className='border border-gray-900 rounded-md px-2 py-1'
-              type='email'
-              id='email'
-              {...form.register('email')}
+          <StudentList
+            refreshKey={refreshKey}
+            onEdit={setEditingStudent}
+          />
+        </section>
+
+        {/* COURSES */}
+        <section>
+          {editingCourse ? (
+            <EditCourseForm
+              course={editingCourse}
+              onCourseUpdated={handleCourseUpdated}
+              onCancel={() => setEditingCourse(null)}
             />
-          </div>
+          ) : (
+            <AddCourseForm
+              onCourseCreated={handleCourseCreated}
+            />
+          )}
 
-          <div className='flex flex-col py-3'>
-            <button
-              disabled={!form.formState.isValid || !form.formState.isDirty}
-              type='submit'
-              className='bg-pink-600 text-white py-2 px-2 font-bold uppercase rounded-full disabled:bg-gray-500 disabled:cursor-crosshair'>
-              Save
-            </button>
-          </div>
+          <CourseList
+            refreshKey={courseRefreshKey}
+            onEdit={setEditingCourse}
+          />
+        </section>
 
-          <div className='flex flex-col py-3'>{JSON.stringify(form.watch())}</div>
-        </form>
       </div>
-    </div>
+    </main>
   );
 }
